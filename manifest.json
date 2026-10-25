@@ -1,0 +1,52 @@
+{
+  "generated_by": "make_manifest.py",
+  "base_image": "ghcr.io/tencentcloud/octop:1.0.2",
+  "note": "base = 官方镜像内原文件；new = fork 内替换后文件",
+  "compat_base_images": [
+    "ghcr.io/tencentcloud/octop:1.0.2",
+    "ghcr.io/tencentcloud/octop:1.0.3b1"
+  ],
+  "compat_note": "两者镜像内 octop_gateway 均为 v1.0.3（PyPI 最新 = 1.0.3，octop 1.0.3b1 依赖 >=1.0.3），8 个文件的 base 哈希逐字节相同；见 tools/verify_103b1.py（2026-10-25 实测 PASS）",
+  "files": [
+    {
+      "rel": "channel.py",
+      "base": "04a96f5496250096f1b8acce65c3a88e9f343cbfe3f54687cc58a20c80940ae8",
+      "new": "5781dec21bab03b05ee3e75110bd0ed5ed37ab03b5a76e0b6eed05a501bf7c54"
+    },
+    {
+      "rel": "channels/feishu.py",
+      "base": "1b97a536fd7db489fd8c966a17ad348b260c7a1d6e6cd89920f03324709e1965",
+      "new": "5995b1ce6e0d2690097be3910de66d38a0c9df5a1ea38b04fb12b203fff8bc7b"
+    },
+    {
+      "rel": "channels/discord.py",
+      "base": "f11e470da6c28bc30a50165d63efe30f61b7dfefe8c9bc091dca44e3eed2fcfe",
+      "new": "2b8fd717c1ca776ee38986c7de02da1a08c7d2330740b0b25e36f733ea72c4b8"
+    },
+    {
+      "rel": "channels/dingtalk.py",
+      "base": "561e3a085d29dfe7ac4edf7fd364a876037404e76edf91a56351965fa7ce835f",
+      "new": "c41ee02f0a5c1acfffcf2d2d0d100846492195e44b52d4047a583511fbc8e23e"
+    },
+    {
+      "rel": "channels/wecom.py",
+      "base": "527ba8b7e2af8946e4a1bc227df8e7d81747e84e7c7498363d48a404e5ef00bf",
+      "new": "7ba2b4fa229929f6931e07a353a80139a1ee3a46f596de7fcfb1d1b17e5851ef"
+    },
+    {
+      "rel": "channels/telegram/channel.py",
+      "base": "4a0ec8c5043b5a6d698b5762822473ac612b28467e1ea72c3f22a94462267ce0",
+      "new": "fd794e06407ab34e3b45e8fd77397d393a8a6ba3f7711dad35da8cafdd3d5b39"
+    },
+    {
+      "rel": "channels/qq/channel.py",
+      "base": "780791d9dcc2eaf5d3d1f5193df43ec0d7929f3d80dd9124952ee0cbd21bf0be",
+      "new": "a2960d76df0f8d073d4b9fde453f2cb052154637ec7ae7269629d17ed4d038f3"
+    },
+    {
+      "rel": "channels/xiaoyi/channel.py",
+      "base": "2e6dd43e6bc0b233a6d6c2af90d91b540e7f1e683baa638313aadfba25d66156",
+      "new": "bf3f41e50c4ac187f0800293959da27c101601a621a139e4a5ed210624338b73"
+    }
+  ]
+}
