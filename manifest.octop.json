@@ -1,0 +1,23 @@
+{
+  "generated_by": "make_manifest_octop.py (2026-10-30)",
+  "base_image": "ghcr.io/tencentcloud/octop:1.0.3b1",
+  "note": "base = 官方 1.0.3b1 镜像内 octop 包原文件；new = fork 内替换后文件",
+  "target": "octop (源码目录 /app/src/octop)",
+  "files": [
+    {
+      "rel": "infra/gateway/media/tool_media.py",
+      "base": "4b849a9c10f1652ab6e8e66e9786f97a8ea77751d9d71177b70ccc9919837f2a",
+      "new": "b84b70ca3a4be4a0765a868ae95c79b1a666c0b8eb716262e9a4328be3c51799"
+    },
+    {
+      "rel": "infra/gateway/process/processor.py",
+      "base": "f3b03cbcf358ce0ac6fe1edc52706557284998db2dedf3532934866835ebdf5e",
+      "new": "dfacc778751417aec4c48789392cb265e75b123e14f5d36ca2a4e55cef5bb7b9"
+    },
+    {
+      "rel": "infra/gateway/process/stream_project.py",
+      "base": "f9127e2498a7e81066634574b1b05f534e1f171dcd6d6a1f317483d385bdb7e2",
+      "new": "f76d24a684804bfc12042d7968ea72940a95e9c86a65e6c6b21dcf5e3362279c"
+    }
+  ]
+}

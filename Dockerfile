@@ -1,10 +1,15 @@
-# 薄镜像：替换 octop_gateway 的 8 个文件，其余完全沿用官方基础镜像
+# 薄镜像：替换 octop_gateway 的 8 个文件 + octop 本体的 3 个文件，其余完全沿用官方基础镜像
 #
 # 密钥设计：**任何不确定都让构建失败**
 #   - 每个目标文件先校验「基础哈希」，不符 => 说明镜像版本变了或上游改了代码
 #   - 复制后再校验「新哈希」，不符 => 说明复制出错
 #   - 最后跑冒烟：新行为在、其余通道还能 import
 # 2026-10-15 的无限重启事故就是旧版本文件配上新版本镜像，且静默通过。
+#
+# 两层补丁：
+#   层 1（manifest.json）      : octop_gateway 8 个文件（IM 通道去重/WS 阈值）
+#   层 2（manifest.octop.json）: octop 本体 3 个文件（媒体投影不再重发历史附件）
+# 层 2 于 2026-10-30 加入，见 README 的「媒体重放修复」一节。
 #
 # 已验证的基础镜像（gateway 均为 v1.0.3，8 文件 base 哈希逐字节相同）：
 #   - ghcr.io/tencentcloud/octop:1.0.2
@@ -19,13 +24,23 @@ ARG OCTOP_BASE=ghcr.io/tencentcloud/octop:1.0.2
 FROM ${OCTOP_BASE}
 
 ARG BASE_DIR=/app/.venv/lib/python3.12/site-packages/octop_gateway
+ARG OCTOP_SRC_DIR=/app/src/octop
 
 COPY files/ /tmp/in/
 COPY apply.py /tmp/apply.py
 COPY manifest.json /tmp/manifest.json
+COPY manifest.octop.json /tmp/manifest.octop.json
 
+# 层 1：octop_gateway（IM 通道去重、WS 阈值）
 RUN /app/.venv/bin/python /tmp/apply.py \
         --base-dir "$BASE_DIR" \
         --src /tmp/in/octop_gateway \
-        --manifest /tmp/manifest.json \
- && rm -rf /tmp/in /tmp/apply.py /tmp/manifest.json
+        --manifest /tmp/manifest.json
+
+# 层 2：octop 本体（媒体投影：历史回放不再重发附件）
+RUN /app/.venv/bin/python /tmp/apply.py \
+        --base-dir "$OCTOP_SRC_DIR" \
+        --src /tmp/in/octop \
+        --manifest /tmp/manifest.octop.json \
+        --smoke octop \
+ && rm -rf /tmp/in /tmp/apply.py /tmp/manifest.json /tmp/manifest.octop.json

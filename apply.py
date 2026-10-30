@@ -30,6 +30,46 @@ def fail(msg: str) -> None:
     raise SystemExit(1)
 
 
+
+def _smoke_octop(base_dir: str) -> int:
+    """octop 包（/app/src/octop）的冒烟：只做语法编译 + 源码断言，不 import 整个应用。
+
+    为什么不 import：octop 是应用本体，导入会触发配置/存储初始化，构建期副作用太大。
+    这里只保证「新代码确实落盘、能编译、关键符号在、旧写法已消失」。
+    """
+    import py_compile
+
+    checks = []
+    tm = os.path.join(base_dir, "infra/gateway/media/tool_media.py")
+    sp = os.path.join(base_dir, "infra/gateway/process/stream_project.py")
+    pr = os.path.join(base_dir, "infra/gateway/process/processor.py")
+    for path in (tm, sp, pr):
+        try:
+            py_compile.compile(path, doraise=True)
+            checks.append(("compile " + os.path.basename(path), True))
+        except Exception as exc:  # noqa: BLE001
+            print("  编译失败 %s: %r" % (path, exc))
+            checks.append(("compile " + os.path.basename(path), False))
+
+    tm_src = open(tm, encoding="utf-8").read()
+    sp_src = open(sp, encoding="utf-8").read()
+    pr_src = open(pr, encoding="utf-8").read()
+    checks += [
+        ("tool_media: is_history_dump 存在", "def is_history_dump(" in tm_src),
+        ("tool_media: history_tool_call_ids 存在", "def history_tool_call_ids(" in tm_src),
+        ("tool_media: dashboard 投影遇历史 dump 提前返回", "if is_history_dump(chunk):" in tm_src),
+        ("stream_project: IM 路径引用 is_history_dump", "is_history_dump" in sp_src),
+        ("processor: 去重集合用历史 id 播种", "history_tool_call_ids(request)" in pr_src),
+    ]
+    bad = [label for label, ok in checks if not ok]
+    for label, ok in checks:
+        print(("  ✓ " if ok else "  ✗ ") + label)
+    if bad:
+        fail("octop 冒烟失败: %s" % ", ".join(bad))
+    print("smoke OK (octop)")
+    return 0
+
+
 def main() -> int:
     args = sys.argv[1:]
     opts = {}
@@ -75,6 +115,12 @@ def main() -> int:
     # 注意：必须让 import 解析到**刚替换过的目录**，否则检查的是别处的旧代码。
     # 镜像里 base-dir 就在 site-packages 下，插入父目录是无害的；但如果不插，
     # 一旦安装路径与 base-dir 不一致，冒烟会对着旧代码跑出假阳性。
+    smoke = opts.get("smoke", "gateway")
+    if smoke == "octop":
+        return _smoke_octop(base_dir)
+    if smoke != "gateway":
+        fail("未知 smoke profile: %s" % smoke)
+
     import importlib
 
     real_base = os.path.realpath(base_dir)

@@ -162,3 +162,33 @@ mkdir -p /tmp/up103 && cp -a /tmp/og103/src/octop_gateway/* /tmp/up103/
 4. `sh build.sh <新tag>`
 
 漏了第 3 步，构建会直接失败。
+
+---
+
+## 层 2：媒体重放修复（2026-10-30）
+
+### 症状
+每轮回复后飞书多出若干条 `[Attachment: /api/agents/.../media/preview?...]` 纯文本。
+
+### 根因链（逐环有实测）
+1. 用户中断 → `AIMessage(tool_calls)` 没有对应 `ToolMessage`（断尾）。
+2. 每轮开始 `PatchToolCallsMiddleware.before_agent`（deepagents）返回
+   `[RemoveMessage(REMOVE_ALL_MESSAGES), *全量历史 + 合成ToolMessage]`，即**整段历史重写**。
+3. 历史里的 `send_file_to_user` 图片结果被当作“本轮附件”重新投影
+   （旧去重集合 `emitted_media_ids` 只在单轮内有效）。
+4. 飞书通道拿到**相对 URL** `/api/agents/...`，aiohttp 报
+   `InvalidUrlClientError`，`except` 兜底把路径当正文发给用户。
+
+### 修法（3 个文件，59 行）
+- `is_history_dump(chunk)`：`messages` 多于 1 条即判定为整段历史回放。
+- IM（`stream_project.py`）与 dashboard（`tool_media.py`）两条路径遇到 dump **跳过媒体投影**。
+- 另用 request 里已存在的 `tool_call_id` 给去重集合播种（第二道保险）。
+
+### 校验
+- `manifest.octop.json` 记录 base（官方 1.0.3b1 原文件）/ new 双向 sha256，
+  `apply.py --smoke octop` 在构建期强制校验。
+- `tools/verify_octop_patch.py` 在镜像内做 11 项校验（哈希/编译/符号/行为）。
+
+### 线上验证（2026-10-30）
+- 切换前：每轮必吐 3 条 `Failed to send media`；切换后 0 次。
+- 主动发图仍正常：飞书 `msg_type=image`，无报错。
